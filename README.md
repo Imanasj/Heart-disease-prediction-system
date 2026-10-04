@@ -1,6 +1,10 @@
 # Heart Disease Prediction System
 XGBoost + pandas + SQLite (SQL) + Streamlit on the UCI Heart Disease dataset.
 
+A machine learning web app that estimates a patient's risk of heart disease from 13 clinical features such as age, chest pain type, cholesterol, and ECG results. Data is cleaned with pandas and stored in SQLite, and an XGBoost model is tuned with cross-validation and evaluated on a held-out test set (ROC-AUC, precision, recall, confusion matrix). A Streamlit app lets users enter patient values, adjust the decision threshold, review model performance, and explore the data with SQL. For educational use only, not a medical device.
+
+Link: https://heart-disease-prediction-system-ucbmbfmq2ywuyvn3uvwhnq.streamlit.app/
+
 ## Setup
 ```bash
 pip install -r requirements.txt
