@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from src import config as C
-from src.data import query, DB_PATH
+import config as C
+from data import query, DB_PATH
 
 st.set_page_config(page_title="Heart Disease Risk", page_icon="❤️", layout="wide")
 
@@ -16,9 +16,28 @@ def load_model():
     return joblib.load(C.MODEL_PATH)
 
 
-if not C.MODEL_PATH.exists():
-    st.error("No trained model found. Run `python -m src.train` first.")
-    st.stop()
+def bootstrap():
+    """First launch: make sure DB + model exist. Trains automatically if the CSV is present."""
+    if not C.CSV_PATH.exists():
+        st.warning("Dataset not found. Upload `heart_disease_uci.csv` from Kaggle "
+                   "(kaggle.com/datasets/redwankarimsony/heart-disease-data) to get started.")
+        up = st.file_uploader("heart_disease_uci.csv", type="csv")
+        if up is None:
+            st.stop()
+        C.CSV_PATH.write_bytes(up.getvalue())
+        st.rerun()
+    if not C.DB_PATH.exists():
+        from data import load_and_clean, build_database
+        build_database(load_and_clean())
+    if not C.MODEL_PATH.exists() or not C.METRICS_PATH.exists():
+        import train
+        with st.spinner("First launch: training the model (about a minute)..."):
+            train.main(n_iter=25)
+        st.rerun()
+
+
+if not (C.MODEL_PATH.exists() and C.DB_PATH.exists() and C.METRICS_PATH.exists()):
+    bootstrap()
 
 bundle = load_model()
 model, default_thr = bundle["model"], bundle["threshold"]
@@ -68,9 +87,12 @@ with tab_pred:
         b.caption("This is a statistical estimate from a small, older dataset. It cannot diagnose anything.")
         # Log to SQL
         import sqlite3
-        with sqlite3.connect(DB_PATH) as con:
-            con.execute("INSERT INTO predictions (age, sex, cp, trestbps, chol, risk, label) VALUES (?,?,?,?,?,?,?)",
-                        (age, sex, cp, trestbps, chol, risk, label))
+        try:
+            with sqlite3.connect(DB_PATH) as con:
+                con.execute("INSERT INTO predictions (age, sex, cp, trestbps, chol, risk, label) VALUES (?,?,?,?,?,?,?)",
+                            (age, sex, cp, trestbps, chol, risk, label))
+        except sqlite3.Error:
+            pass
 
 # ---------------------------------------------------------------- Evaluation
 with tab_eval:

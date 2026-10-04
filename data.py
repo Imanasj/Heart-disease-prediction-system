@@ -1,7 +1,7 @@
 """Load the Kaggle CSV, clean it, store it in SQLite, and read it back with SQL."""
 import sqlite3
 import pandas as pd
-from .config import CSV_PATH, DB_PATH, FEATURES, TARGET
+from config import CSV_PATH, DB_PATH, FEATURES, TARGET
 
 RENAMES = {"thalach": "thalch"}  # older versions of the dataset use 'thalach'
 
@@ -60,4 +60,4 @@ def load_training_frame() -> pd.DataFrame:
     return df
 
 
-from .config import NUMERIC as NUMERIC_COLS  # noqa: E402
+from config import NUMERIC as NUMERIC_COLS  # noqa: E402

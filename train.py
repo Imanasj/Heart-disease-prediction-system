@@ -1,4 +1,4 @@
-"""Train + evaluate the XGBoost heart-disease model.   Run:  python -m src.train"""
+"""Train + evaluate the XGBoost heart-disease model.   Run:  python train.py"""
 import json
 import joblib
 import numpy as np
@@ -16,8 +16,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from xgboost import XGBClassifier
 
-from . import config as C
-from .data import load_and_clean, build_database, load_training_frame
+import config as C
+from data import load_and_clean, build_database, load_training_frame
 
 
 def build_pipeline(scale_pos_weight=1.0) -> Pipeline:
@@ -41,7 +41,7 @@ def tidy_categoricals(df):
     return df
 
 
-def main():
+def main(n_iter=40):
     # 1) CSV -> clean -> SQLite -> SQL query -> DataFrame
     build_database(load_and_clean())
     df = tidy_categoricals(load_training_frame())
@@ -64,7 +64,7 @@ def main():
         "clf__reg_lambda": [1, 5, 10],
         "clf__gamma": [0, 0.1, 0.5],
     }
-    search = RandomizedSearchCV(build_pipeline(spw), space, n_iter=40, scoring="roc_auc", cv=cv,
+    search = RandomizedSearchCV(build_pipeline(spw), space, n_iter=n_iter, scoring="roc_auc", cv=cv,
                                 random_state=C.RANDOM_STATE, n_jobs=-1, refit=True, verbose=0)
     search.fit(X_tr, y_tr)
     model = search.best_estimator_
